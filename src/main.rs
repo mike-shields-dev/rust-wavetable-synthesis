@@ -1,3 +1,7 @@
+use std::time::Duration;
+use rodio::{ OutputStream, Source };
+
+
 struct WavetableOscillator {
     sample_rate: u32,
     wave_table: Vec<f32>,
