@@ -7,6 +7,7 @@ struct WavetableOscillator {
     wave_table: Vec<f32>,
     index: f32,
     index_increment: f32,
+    gain: f32,
 }
 
 impl WavetableOscillator {
@@ -23,14 +24,20 @@ impl WavetableOscillator {
         self.index_increment = frequency * self.wave_table.len() as f32 / self.sample_rate as f32;
     }
 
-    fn get_sample(&mut self) -> f32 {
-        let sample = self.lerp();
-        self.index += self.index_increment;
-        self.index %= self.wave_table.len() as f32;
-        return sample;
+    fn set_gain(&mut self, gain: f32) {
+        if gain >= -1.0 && gain <= 1.0 {
+            self.gain = gain;
+        }
     }
 
-    fn lerp(&self) -> f32 {
+    fn get_sample(&mut self) -> f32 {
+        let sample = self.linear_interpolate() * self.gain as f32;
+        self.index += self.index_increment;
+        self.index %= self.wave_table.len() as f32;
+        sample
+    }
+
+    fn linear_interpolate(&self) -> f32 {
         let truncated_index = self.index as usize;
         let next_index = (truncated_index + 1) % self.wave_table.len();
 
@@ -78,6 +85,7 @@ fn main() {
 
     let mut oscillator = WavetableOscillator::new(44100, wave_table);
     oscillator.set_frequency(440.0);
+    oscillator.set_gain(0.1);
 
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
     let _result = stream_handle.play_raw(oscillator.convert_samples());
