@@ -42,6 +42,15 @@ impl WavetableOscillator {
     }
 }
 
+impl Iterator for WavetableOscillator {
+    type Item = f32;
+
+    fn next(&mut self) -> Option<f32> {
+        return Some(self.get_sample());
+    }
+}
+
+
 fn main() {
     let wave_table_size = 64;
     let mut wave_table: Vec<f32> = Vec::with_capacity(wave_table_size);
