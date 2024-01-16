@@ -50,6 +50,23 @@ impl Iterator for WavetableOscillator {
     }
 }
 
+impl Source for WavetableOscillator {
+    fn channels(&self) -> u16 {
+        return 1;
+    }
+
+    fn sample_rate(&self) -> u32 {
+        return self.sample_rate;
+    }
+
+    fn current_frame_len(&self) -> Option<usize> {
+        return None;
+    }
+
+    fn total_duration(&self) -> Option<Duration> {
+        return None;
+    }
+}
 
 fn main() {
     let wave_table_size = 64;
