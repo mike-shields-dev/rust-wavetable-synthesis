@@ -45,4 +45,7 @@ fn main() {
     for n in 0..wave_table_size {
         wave_table.push((2.0 * std::f32::consts::PI * n as f32 / wave_table_size as f32).sin());
     }
+
+    let mut oscillator = WavetableOscillator::new(44100, wave_table);
+    oscillator.set_frequency(440.0);
 }
