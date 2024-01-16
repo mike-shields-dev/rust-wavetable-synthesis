@@ -1,6 +1,20 @@
 use std::time::Duration;
 use rodio::{ OutputStream, Source };
+use clap::Parser;
+use waveforms::{render_pulse, render_saw, render_sin, render_triangle};
 
+mod waveforms;
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about=None)]
+
+struct Args {
+    #[arg(short, long, default_value_t = ("sine").to_string())]
+    waveform: String,
+    #[arg(short, long, default_value_t = 0.5)]
+    gain: f32,
+    #[arg(short, long, default_value_t = 1.0)]
+    duration: f32,
+}
 
 struct WavetableOscillator {
     sample_rate: u32,
@@ -17,6 +31,7 @@ impl WavetableOscillator {
             wave_table,
             index: 0.0,
             index_increment: 0.0,
+            gain: 1.0,
         };
     }
 
@@ -76,19 +91,28 @@ impl Source for WavetableOscillator {
 }
 
 fn main() {
+    let args = Args::parse();
+    let waveform_type = args.waveform.as_str();
+    let gain = args.gain;
+    let duration: f32 = args.duration;
+
     let wave_table_size = 64;
     let mut wave_table: Vec<f32> = Vec::with_capacity(wave_table_size);
 
-    for n in 0..wave_table_size {
-        wave_table.push((2.0 * std::f32::consts::PI * n as f32 / wave_table_size as f32).sin());
-    }
+    match waveform_type {
+        "sine" => render_sin(&mut wave_table, wave_table_size),
+        "saw" => render_saw(&mut wave_table, wave_table_size),
+        "triangle" => render_triangle(&mut wave_table, wave_table_size),
+        "pulse" => render_pulse(&mut wave_table, wave_table_size),
+        _ => render_sin(&mut wave_table, wave_table_size)
+    }   
 
     let mut oscillator = WavetableOscillator::new(44100, wave_table);
     oscillator.set_frequency(440.0);
-    oscillator.set_gain(0.1);
+    oscillator.set_gain(gain);
 
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
     let _result = stream_handle.play_raw(oscillator.convert_samples());
 
-    std::thread::sleep(Duration::from_secs(5));
+    std::thread::sleep(Duration::from_millis((1000.0 * duration.abs()) as u64));
 }
