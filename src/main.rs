@@ -5,7 +5,8 @@ mod waveforms;
 use waveforms::render_waveform;
 mod wavetable_oscillator;
 use wavetable_oscillator::WavetableOscillator;
-
+mod note_to_freq;
+use note_to_freq::note_to_freq;
 #[derive(Parser, Debug)]
 
 struct Args {
@@ -17,6 +18,8 @@ struct Args {
     milliseconds: u64,
     #[arg(short, long, default_value_t = 50.0)]
     duty: f64,
+    #[arg(short, long, default_value_t = String::from("C3"))]
+    note: String,
 }
 
 fn main() {
@@ -28,11 +31,13 @@ fn main() {
     let gain_limit = 1.0;
     let gain = args.gain.max(-gain_limit).min(gain_limit);
     let mut wave_table: Vec<f32> = Vec::with_capacity(wave_table_size);
+    let note_name = args.note.to_uppercase();
+    let frequency = note_to_freq(note_name).unwrap();
 
     render_waveform(waveform_type, &mut wave_table, wave_table_size, duty);
 
     let mut oscillator = WavetableOscillator::new(44100, wave_table);
-    oscillator.set_frequency(440.0);
+    oscillator.set_frequency(frequency);
     oscillator.set_gain(gain);
 
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
